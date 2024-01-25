@@ -9,5 +9,5 @@ spec:
     storage: 512Mi
   nfs:
     server: 10.206.24.14
-    path: /dev/sda1/sapujagad2/hive
+    path: /opt/sapujagad2/hive
   storageClassName: sapujagad2-package-hive

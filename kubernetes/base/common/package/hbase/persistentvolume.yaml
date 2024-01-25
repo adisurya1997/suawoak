@@ -9,5 +9,5 @@ spec:
     storage: 1Gi
   nfs:
     server: 10.206.24.14
-    path: /dev/sda1/sapujagad2/hbase-client
+    path: /opt/sapujagad2/hbase-client
   storageClassName: sapujagad2-package-hbase-client

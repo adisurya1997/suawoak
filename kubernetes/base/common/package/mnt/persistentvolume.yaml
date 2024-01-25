@@ -8,5 +8,5 @@ spec:
   accessModes:
     - ReadWriteMany
   hostPath:
-    path: "/dev/sda1/sapujagad2/"
+    path: "/opt/sapujagad2/"
   storageClassName: sapujagad2-package-mnt

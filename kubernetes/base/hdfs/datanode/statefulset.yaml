@@ -44,6 +44,6 @@ spec:
           name: hadoop-conf
       - name: mnt
         hostPath:
-          path: /dev/sda1/sapujagad2/mnt
+          path: /opt/sapujagad2/mnt
           type: DirectoryOrCreate
   volumeClaimTemplates: []
