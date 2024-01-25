@@ -1,0 +1,5 @@
+resources:
+- coordinator
+- worker
+commonLabels:
+  component: trino

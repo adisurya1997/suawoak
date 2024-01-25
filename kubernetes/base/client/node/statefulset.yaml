@@ -1,0 +1,130 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: client-node
+spec:
+  selector:
+    matchLabels: {}
+  serviceName: client-node
+  replicas: 1
+  template:
+    spec:
+      containers:
+      - name: sleep
+        image: sapujagad2-util
+        args:
+        - sleep
+        - inf
+        envFrom:
+        - configMapRef:
+            name: aws-env
+        - configMapRef:
+            name: hadoop-env
+        - configMapRef:
+            name: hbase-env
+        - configMapRef:
+            name: hive-env
+        - configMapRef:
+            name: ozone-env
+        - configMapRef:
+            name: spark-env
+        - configMapRef:
+            name: tez-env
+        - configMapRef:
+            name: trino-env
+        - configMapRef:
+            name: zookeeper-env
+        env:
+        - name: HADOOP_USER_NAME
+          value: hdfs
+        - name: HADOOP_CLASSPATH
+          value: $(TEZ_CONF_DIR):$(TEZ_JARS)/*:$(TEZ_JARS)/lib/*
+        - name: PATH
+          # yamllint disable-line rule:line-length
+          value: $(TRINO_HOME)/trino-cli/bin:$(HBASE_HOME)/bin:$(HIVE_HOME)/bin:$(OZONE_HOME)/bin:$(SPARK_HOME)/bin:$(HADOOP_HOME)/bin:/usr/local/openjdk-8/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+        volumeMounts:
+        - name: hadoop-conf
+          mountPath: /etc/hadoop/conf
+        - name: hbase-conf
+          mountPath: /etc/hbase/conf
+        - name: hive-conf
+          mountPath: /etc/hive/conf
+        - name: ozone-conf
+          mountPath: /etc/ozone/conf
+        - name: spark-conf
+          mountPath: /etc/spark/conf
+        - name: tez-conf
+          mountPath: /etc/tez/conf
+        - name: trino-conf
+          mountPath: /etc/trino/conf/cli.properties
+          subPath: cli.properties
+        - name: zookeeper-conf
+          mountPath: /etc/zookeeper/conf
+        - name: package-hadoop
+          mountPath: /opt/hadoop
+        - name: package-hbase-client
+          mountPath: /opt/hbase
+        - name: package-hive
+          mountPath: /opt/hive
+        - name: package-ozone
+          mountPath: /opt/ozone
+        - name: package-spark
+          mountPath: /opt/spark
+        - name: package-tez
+          mountPath: /opt/tez
+        - name: package-trino
+          mountPath: /opt/trino
+        - name: package-zookeeper
+          mountPath: /opt/zookeeper
+        workingDir: /home/sapujagad2
+      terminationGracePeriodSeconds: 0
+      volumes:
+      - name: hadoop-conf
+        configMap:
+          name: hadoop-conf
+      - name: hbase-conf
+        configMap:
+          name: hbase-conf
+      - name: hive-conf
+        configMap:
+          name: hive-conf
+      - name: ozone-conf
+        configMap:
+          name: ozone-conf
+      - name: spark-conf
+        configMap:
+          name: spark-conf
+      - name: tez-conf
+        configMap:
+          name: tez-conf
+      - name: trino-conf
+        configMap:
+          name: trino-conf
+      - name: zookeeper-conf
+        configMap:
+          name: zookeeper-conf
+      - name: package-hadoop
+        persistentVolumeClaim:
+          claimName: package-hadoop
+      - name: package-hbase-client
+        persistentVolumeClaim:
+          claimName: package-hbase-client
+      - name: package-hive
+        persistentVolumeClaim:
+          claimName: package-hive
+      - name: package-ozone
+        persistentVolumeClaim:
+          claimName: package-ozone
+      - name: package-spark
+        persistentVolumeClaim:
+          claimName: package-spark
+      - name: package-tez
+        persistentVolumeClaim:
+          claimName: package-tez
+      - name: package-trino
+        persistentVolumeClaim:
+          claimName: package-trino
+      - name: package-zookeeper
+        persistentVolumeClaim:
+          claimName: package-zookeeper
+  volumeClaimTemplates: []

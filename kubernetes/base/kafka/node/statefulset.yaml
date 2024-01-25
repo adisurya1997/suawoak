@@ -1,0 +1,35 @@
+apiVersion: apps/v1
+kind: StatefulSet
+#kind: Deployment
+metadata:
+  name: kafka-server
+spec:
+  replicas: 3
+  serviceName: kafka-server
+  selector:
+    matchLabels:
+        app: kafka-server
+  template:
+    metadata:
+      labels:
+        app: kafka-server
+    spec:
+      hostname: kafka
+      containers:
+      - name: kafka
+        image: bitnami/kafka:2.6.0  
+#        image: bitnami/kafka:latest
+        securityContext:
+          runAsUser: 0
+        resources:
+          requests:
+            memory: "1G"
+            cpu: "1"             
+        ports:
+         - containerPort: 9092
+        env:
+        - name: KAFKA_CFG_ZOOKEEPER_CONNECT
+          value: zookeeper-server-0.zookeeper-server.sapujagad2.svc.cluster.local:2181,zookeeper-server-1.zookeeper-server.sapujagad2.svc.cluster.local:2181,zookeeper-server-2.zookeeper-server.sapujagad2.svc.cluster.local:2181
+#          value: zookeeper-server:2181
+        - name: ALLOW_PLAINTEXT_LISTENER
+          value: "yes" 

@@ -1,0 +1,61 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: yarn-nodemanager
+spec:
+  selector:
+    matchLabels: {}
+  serviceName: yarn-nodemanager
+  podManagementPolicy: Parallel
+  replicas: 3
+  template:
+    spec
+:
+      initContainers:
+      - name: wait-for-resourcemanager
+        image: sapujagad2-util
+        args:
+        - wait-for-rollout
+        - statefulset/yarn-resourcemanager
+      containers:
+      - name: nodemanager
+        image: sapujagad2-hadoop
+        command:
+        - $(HADOOP_HOME)/bin/yarn
+        args:
+        - nodemanager
+        envFrom:
+        - configMapRef:
+            name: hadoop-env
+        env:
+        - name: HADOOP_CLASSPATH
+          value: "/opt/spark/yarn/*:/opt/tez/share/tez-aux-services.jar"
+        readinessProbe:
+          tcpSocket:
+            port: 8041
+        securityContext:
+          runAsUser: 1012
+          runAsGroup: 1010
+        volumeMounts:
+        - name: hadoop-conf
+          mountPath: /etc/hadoop/conf
+        - name: mnt
+          mountPath: /mnt
+        - name: package-spark
+          mountPath: /opt/spark
+        - name: package-tez
+          mountPath: /opt/tez
+      terminationGracePeriodSeconds: 5
+      volumes:
+      - name: hadoop-conf
+        configMap:
+          name: hadoop-conf
+      - name: mnt
+        emptyDir: {}
+      - name: package-spark
+        persistentVolumeClaim:
+          claimName: package-spark
+      - name: package-tez
+        persistentVolumeClaim:
+          claimName: package-tez
+  volumeClaimTemplates: []

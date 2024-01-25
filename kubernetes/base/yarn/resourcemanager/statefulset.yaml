@@ -1,0 +1,46 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: yarn-resourcemanager
+spec:
+  selector:
+    matchLabels: {}
+  serviceName: yarn-resourcemanager
+  podManagementPolicy: Parallel
+  replicas: 1
+  template:
+    spec:
+      initContainers:
+      - name: wait-for-dns
+        image: sapujagad2-util
+        args:
+        - wait-for-dns
+      containers:
+      - name: resourcemanager
+        image: sapujagad2-hadoop
+        command:
+        - $(HADOOP_HOME)/bin/yarn
+        args:
+        - resourcemanager
+        envFrom:
+        - configMapRef:
+            name: hadoop-env
+        readinessProbe:
+          tcpSocket:
+            port: 8033
+        securityContext:
+          runAsUser: 1012
+          runAsGroup: 1010
+        volumeMounts:
+        - name: hadoop-conf
+          mountPath: /etc/hadoop/conf
+        - name: mnt
+          mountPath: /mnt
+      terminationGracePeriodSeconds: 5
+      volumes:
+      - name: hadoop-conf
+        configMap:
+          name: hadoop-conf
+      - name: mnt
+        emptyDir: {}
+  volumeClaimTemplates: []

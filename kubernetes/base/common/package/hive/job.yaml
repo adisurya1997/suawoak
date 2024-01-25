@@ -1,0 +1,38 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: package-hive
+spec:
+  template:
+    spec:
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+            - matchExpressions:
+              - key: node-type
+                operator: In
+                values:
+                - master-1
+      containers:
+      - name: sapujagad2-hive
+        image: sapujagad2-hive
+        command:
+        - /bin/bash
+        args:
+        - -c
+        - |
+          rm -rf /mnt/sapujagad2/hive
+          cp -R /opt/hive /mnt/sapujagad2/hive
+          rm /mnt/sapujagad2/hive/lib/log4j-slf4j-impl*
+        securityContext:
+          runAsUser: 0
+          runAsGroup: 0
+        volumeMounts:
+        - name: package-home
+          mountPath: /mnt/sapujagad2
+      restartPolicy: Never
+      volumes:
+      - name: package-home
+        hostPath:
+          path: /dev/sda1/sapujagad2/

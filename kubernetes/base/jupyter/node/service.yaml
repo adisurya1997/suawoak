@@ -1,0 +1,22 @@
+# # Make the IP address of a client-node resolvable from a Spark job
+# apiVersion: v1
+# kind: Service
+# metadata:
+#   name: jupyter-node
+# spec:
+#   type: NodePort
+#   ports:
+#     - port: 80
+#       targetPort: 8000
+#   selector:
+#     app: jupyterhub
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: jupyter-node
+spec:
+  type: LoadBalancer
+  ports:
+   - port: 8000
+  selector: {}

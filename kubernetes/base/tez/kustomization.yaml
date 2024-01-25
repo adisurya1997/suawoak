@@ -1,0 +1,5 @@
+resources:
+- deploy
+- ui
+commonLabels:
+  component: tez

@@ -1,0 +1,35 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: package-spark
+spec:
+  template:
+    spec:
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+            - matchExpressions:
+              - key: node-type
+                operator: In
+                values:
+                - master-1
+      containers:
+      - name: sapujagad2-spark
+        image: sapujagad2-spark
+        command:
+        - /bin/bash
+        args:
+        - -c
+        - "rm -rf /mnt/sapujagad2/spark && cp -R /opt/spark /mnt/sapujagad2/spark"
+        securityContext:
+          runAsUser: 0
+          runAsGroup: 0
+        volumeMounts:
+        - name: package-home
+          mountPath: /mnt/sapujagad2
+      restartPolicy: Never
+      volumes:
+      - name: package-home
+        hostPath:
+          path: /dev/sda1/sapujagad2/

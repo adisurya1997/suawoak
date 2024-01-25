@@ -1,0 +1,44 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: hdfs-mkdir
+spec:
+  template:
+    spec:
+      initContainers:
+      - name: wait-for-namenode
+        image: sapujagad2-util
+        args:
+        - wait-for-rollout
+        - statefulset/hdfs-namenode
+      containers:
+      - name: mkdir
+        image: sapujagad2-util 
+        securityContext:
+          runAsUser: 0 
+        command:
+        - /bin/bash
+        - -c
+        - echo "hdfs-namenode.sapujagad2.svc.cluster.local hdfs-namenode-0.hdfs-namenode" >> /etc/hosts
+        args:
+        - -c
+        - |
+          docker-entrypoint.sh hdfs-mkdir /apps hdfs:supergroup 755
+          docker-entrypoint.sh hdfs-mkdir /tmp hdfs:supergroup 1777
+          docker-entrypoint.sh hdfs-mkdir /user hdfs:supergroup 755
+        envFrom:
+        - configMapRef:
+            name: hadoop-env
+        env:
+        - name: HADOOP_USER_NAME
+          value: hdfs
+        volumeMounts:
+        - name: hadoop-conf
+          mountPath: /etc/hadoop/conf
+      restartPolicy: Never
+      volumes:
+      - name: hadoop-conf
+        configMap:
+          name: hadoop-conf
+      - name: mnt
+        emptyDir: {}

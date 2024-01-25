@@ -1,0 +1,4 @@
+resources:
+- server
+commonLabels:
+  component: zookeeper

@@ -1,0 +1,39 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: tez-ui-statefulset
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: tez-ui
+  template:
+    metadata:
+      labels:
+        app: tez-ui
+    spec:
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+            - matchExpressions:
+              - key: node-type
+                operator: In
+                values:
+                - worker-4
+      containers:
+      - name: tez-ui
+        image: tomcat:9.0.37-jdk8-openjdk
+        readinessProbe:
+          tcpSocket:
+            port: 8080
+        volumeMounts:
+        - name: package-tez
+          mountPath: /opt/tez
+#        - name: package-tez
+#          mountPath: /usr/local/tomcat/webapps/tez-ui.war
+#          subPath: share/tez-ui.war
+      volumes:
+      - name: package-tez
+        persistentVolumeClaim:
+          claimName: package-tez

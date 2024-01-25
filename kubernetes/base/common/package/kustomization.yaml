@@ -1,0 +1,14 @@
+resources:
+- hadoop
+- hbase
+- hive
+- ozone
+- spark
+- tez
+- trino
+- zookeeper
+- jupyter
+- notebook
+- mnt
+commonLabels:
+  component: package

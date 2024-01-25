@@ -1,0 +1,5 @@
+resources:
+- mkdir
+- node
+commonLabels:
+  component: client

@@ -1,0 +1,11 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: kafka-server
+spec:
+  selector:
+    app: kafka-server
+  ports:
+  - port: 9092
+    targetPort: 9092
+  type: LoadBalancer

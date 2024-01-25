@@ -1,0 +1,4 @@
+resources:
+- node
+commonLabels:
+  component: besapu

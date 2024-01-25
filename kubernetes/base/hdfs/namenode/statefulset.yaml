@@ -1,0 +1,74 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: hdfs-namenode
+spec:
+  selector:
+    matchLabels: {}
+  serviceName: hdfs-namenode
+  replicas: 1
+  template:
+    spec:
+      initContainers:
+      - name: wait-for-dns
+        image: sapujagad2-util
+        args:
+        - wait-for-dns
+      - name: format
+        image: sapujagad2-hadoop
+        command:
+        - /bin/bash
+        args:
+        - -c
+        - |
+          index=${POD_NAME##*-}
+          if [[ "$index" -eq 0 ]]; then
+            "${HADOOP_HOME}/bin/hdfs" namenode -format -force
+          else
+            "${HADOOP_HOME}/bin/hdfs" namenode -bootstrapStandby -force
+          fi
+        envFrom:
+        - configMapRef:
+            name: hadoop-env
+        env:
+        - name: POD_NAME
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.name
+        securityContext:
+          runAsUser: 1011
+          runAsGroup: 1010
+        volumeMounts:
+        - name: hadoop-conf
+          mountPath: /etc/hadoop/conf
+        - name: mnt
+          mountPath: /mnt
+      containers:
+      - name: namenode
+        image: sapujagad2-hadoop
+        command:
+        - $(HADOOP_HOME)/bin/hdfs
+        args:
+        - namenode
+        envFrom:
+        - configMapRef:
+            name: hadoop-env
+        readinessProbe:
+          tcpSocket:
+            port: 8020
+        securityContext:
+          runAsUser: 1011
+          runAsGroup: 1010
+        volumeMounts:
+        - name: hadoop-conf
+          mountPath: /etc/hadoop/conf
+        - name: mnt
+          mountPath: /mnt
+      terminationGracePeriodSeconds: 5
+      volumes:
+      - name: hadoop-conf
+        configMap:
+          name: hadoop-conf
+      - name: mnt
+        emptyDir: {}
+  volumeClaimTemplates: []

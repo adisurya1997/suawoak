@@ -1,0 +1,90 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: hive-metastore
+spec:
+  selector:
+    matchLabels: {}
+  serviceName: hive-metastore
+  replicas: 1
+  template:
+    spec:
+      initContainers:
+      - name: cleanup
+        image: sapujagad2-hive
+        command:
+        - rm
+        args:
+        - -rf
+        - /mnt/hive/metastore
+        volumeMounts:
+        - name: mnt
+          mountPath: /mnt
+      - name: init-schema
+        image: sapujagad2-hive
+        command:
+        - $(HIVE_HOME)/bin/schematool
+        args:
+        - -initSchema
+        - -dbType
+        - derby
+        envFrom:
+        - configMapRef:
+            name: hadoop-env
+        - configMapRef:
+            name: hive-env
+        volumeMounts:
+        - name: hadoop-conf
+          mountPath: /etc/hadoop/conf
+        - name: hive-conf
+          mountPath: /etc/hive/conf
+        - name: mnt
+          mountPath: /mnt
+        - name: package-hadoop
+          mountPath: /opt/hadoop
+      - name: wait-for-warehouse-dir
+        image: sapujagad2-util
+        args:
+        - wait-for-job
+        - hive-mkdir
+      containers:
+      - name: metastore
+        image: sapujagad2-hive
+        command:
+        - $(HIVE_HOME)/bin/schematool
+        args:
+        - --service
+        - metastore
+        envFrom:
+        - configMapRef:
+            name: aws-env
+        - configMapRef:
+            name: hadoop-env
+        - configMapRef:
+            name: hive-env
+        readinessProbe:
+          tcpSocket:
+            port: 9083
+        volumeMounts:
+        - name: hadoop-conf
+          mountPath: /etc/hadoop/conf
+        - name: hive-conf
+          mountPath: /etc/hive/conf
+        - name: mnt
+          mountPath: /mnt
+        - name: package-hadoop
+          mountPath: /opt/hadoop
+      terminationGracePeriodSeconds: 5
+      volumes:
+      - name: hadoop-conf
+        configMap:
+          name: hadoop-conf
+      - name: hive-conf
+        configMap:
+          name: hive-conf
+      - name: mnt
+        emptyDir: {}
+      - name: package-hadoop
+        persistentVolumeClaim:
+          claimName: package-hadoop
+  volumeClaimTemplates: []

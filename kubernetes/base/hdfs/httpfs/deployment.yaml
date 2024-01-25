@@ -1,0 +1,73 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: hdfs-httpfs
+spec:
+  replicas: 1
+  selector:
+    matchLabels: {}
+  template:
+    spec:
+      initContainers:
+      - name: httpfs-cp-tomcat
+        image: sapujagad2-hadoop
+        command:
+        - /bin/bash
+        args:
+        - -c
+        - |
+          readonly hadoop_version=$("${HADOOP_HOME}/bin/hdfs" version | head -n 1)
+          if [[ "${hadoop_version}" == "Hadoop 2."* ]]; then
+            cp -R "${HADOOP_HOME}/share/hadoop/httpfs/tomcat" "${CATALINA_BASE}"
+            chown -R httpfs:httpfs "${CATALINA_BASE}"
+          fi
+        envFrom:
+        - configMapRef:
+            name: hadoop-env
+        - configMapRef:
+            name: httpfs-env
+        securityContext:
+          runAsUser: 0
+          runAsGroup: 0
+        volumeMounts:
+        - name: hadoop-conf
+          mountPath: /etc/hadoop/conf
+        - name: mnt
+          mountPath: /mnt
+      containers:
+      - name: httpfs
+        image: sapujagad2-hadoop
+        command:
+        - /bin/bash
+        args:
+        - -c
+        - |
+          readonly hadoop_version=$("${HADOOP_HOME}/bin/hdfs" version | head -n 1)
+          if [[ "${hadoop_version}" == "Hadoop 2."* ]]; then
+            "${HADOOP_HOME}/sbin/httpfs.sh" run
+          else
+            "${HADOOP_HOME}/bin/hdfs" httpfs
+          fi
+        envFrom:
+        - configMapRef:
+            name: hadoop-env
+        - configMapRef:
+            name: httpfs-env
+        readinessProbe:
+          tcpSocket:
+            port: 14000
+        securityContext:
+          runAsUser: 1014
+          runAsGroup: 1014
+        volumeMounts:
+        - name: hadoop-conf
+          mountPath: /etc/hadoop/conf
+        - name: mnt
+          mountPath: /mnt
+      terminationGracePeriodSeconds: 5
+      volumes:
+      - name: hadoop-conf
+        configMap:
+          name: hadoop-conf
+      - name: mnt
+        emptyDir: {}

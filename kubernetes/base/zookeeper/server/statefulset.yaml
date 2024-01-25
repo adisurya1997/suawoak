@@ -1,0 +1,52 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: zookeeper-server
+spec:
+  replicas: 3
+  serviceName: zookeeper-server
+  selector:
+    matchLabels:
+      app: zookeeper-server
+  template:
+    metadata:
+      labels:
+        component: zookeeper-server
+        app: zookeeper-server
+    spec:
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+            - matchExpressions:
+              - key: node-type
+                operator: In
+                values:
+                - worker-3
+                - worker-2
+                - master
+      hostname: zookeeper-server
+      subdomain: zookeeper-server
+      containers:
+      - name: zookeeper
+        image: bitnami/zookeeper:latest
+        securityContext:
+          runAsUser: 0 
+        ports:
+        - containerPort: 2181
+        - containerPort: 2888
+        - containerPort: 3888
+        lifecycle:
+          postStart:
+            exec:
+              command:
+                - "sh"
+                - "-c"
+                - >
+                  echo $(( $(cat /etc/hosts | grep zookeeper | awk '{print($3)}' | awk '{split($0,array,"-")} END{print array[3]}') + 1 )) > /bitnami/zookeeper/data/myid
+        env:
+        - name: ALLOW_ANONYMOUS_LOGIN
+          value: "yes"
+        - name: ZOO_SERVERS
+          value:  zookeeper-server-0.zookeeper-server.sapujagad2.svc.cluster.local:2888:3888,zookeeper-server-1.zookeeper-server.sapujagad2.svc.cluster.local:2888:3888,zookeeper-server-2.zookeeper-server.sapujagad2.svc.cluster.local:2888:3888
+

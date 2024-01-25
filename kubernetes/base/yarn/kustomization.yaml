@@ -1,0 +1,7 @@
+resources:
+- mkdir
+- resourcemanager
+- nodemanager
+- timelineserver
+commonLabels:
+  component: yarn

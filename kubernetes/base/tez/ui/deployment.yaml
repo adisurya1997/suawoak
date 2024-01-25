@@ -1,0 +1,26 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: tez-ui
+spec:
+  replicas: 1
+  selector:
+    matchLabels: {}
+  template:
+    spec:
+      containers:
+      - name: tez-ui
+        image: tomcat:9.0.37-jdk8-openjdk
+        readinessProbe:
+          tcpSocket:
+            port: 8080
+        volumeMounts:
+        - name: package-tez
+          mountPath: /opt/tez
+#        - name: package-tez
+#          mountPath: /usr/local/tomcat/webapps/tez-ui.war
+#          subPath: share/tez-ui.war
+      volumes:
+      - name: package-tez
+        persistentVolumeClaim:
+          claimName: package-tez

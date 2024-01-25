@@ -1,0 +1,40 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: yarn-timelineserver
+spec:
+  selector:
+    matchLabels: {}
+  serviceName: yarn-timelineserver
+  replicas: 1
+  template:
+    spec:
+      containers:
+      - name: timelineserver
+        image: sapujagad2-hadoop
+        command:
+        - $(HADOOP_HOME)/bin/yarn
+        args:
+        - timelineserver
+        envFrom:
+        - configMapRef:
+            name: hadoop-env
+        readinessProbe:
+          tcpSocket:
+            port: 10200
+        securityContext:
+          runAsUser: 1012
+          runAsGroup: 1010
+        volumeMounts:
+        - name: hadoop-conf
+          mountPath: /etc/hadoop/conf
+        - name: mnt
+          mountPath: /mnt
+      terminationGracePeriodSeconds: 5
+      volumes:
+      - name: hadoop-conf
+        configMap:
+          name: hadoop-conf
+      - name: mnt
+        emptyDir: {}
+  volumeClaimTemplates: []

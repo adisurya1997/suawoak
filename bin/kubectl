@@ -1,0 +1,6 @@
+#!/bin/bash
+set -eu
+
+readonly NAMESPACE=sapujagad2
+
+kubectl --namespace ${NAMESPACE} "${@}"

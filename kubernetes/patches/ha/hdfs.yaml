@@ -1,0 +1,71 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: hdfs-journalnode
+spec:
+  replicas: 3
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: hdfs-namenode
+spec:
+  replicas: 2
+  template:
+    spec:
+      initContainers:
+      - name: wait-for-zookeeper
+        image: sapujagad2-util
+        args:
+        - wait-for-rollout
+        - statefulset/zookeeper-server
+      - name: format-zookeeper
+        image: sapujagad2-hadoop
+        command:
+        - /bin/bash
+        args:
+        - -c
+        - |
+          index=${POD_NAME##*-}
+          if [[ "$index" -eq 0 ]]; then
+            "${HADOOP_HOME}/bin/hdfs" zkfc -formatZK
+          fi
+        envFrom:
+        - configMapRef:
+            name: hadoop-env
+        env:
+        - name: POD_NAME
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.name
+        securityContext:
+          runAsUser: 1011
+          runAsGroup: 1010
+        volumeMounts:
+        - name: hadoop-conf
+          mountPath: /etc/hadoop/conf
+        - name: mnt
+          mountPath: /mnt
+      - name: wait-for-journalnode
+        image: sapujagad2-util
+        args:
+        - wait-for-rollout
+        - statefulset/hdfs-journalnode
+      containers:
+      - name: zkfc
+        image: sapujagad2-hadoop
+        command:
+        - $(HADOOP_HOME)/bin/hdfs
+        args:
+        - zkfc
+        envFrom:
+        - configMapRef:
+            name: hadoop-env
+        securityContext:
+          runAsUser: 1011
+          runAsGroup: 1010
+        volumeMounts:
+        - name: hadoop-conf
+          mountPath: /etc/hadoop/conf
+        - name: mnt
+          mountPath: /mnt
